@@ -382,25 +382,45 @@ run(main, cleanup)
 ```python
 import wifi
 import time
-import adafruitIO
+import adafruitio
+import systemio
 
-SMOKE = 34
-wifi.setWiFi("YOUR_WIFI", "YOUR_PASSWORD")
+SMOKE = 33
+
+# ── setup ────────────────────────────────────────────────
+wifi.setWiFi("YOUR_WIFI","YOUR_PASSWORD")
 wifi.connect()
 
-io = adafruitIO.AdafruitIO("IOName", "YOUR_AIO_KEY")
-io.addDevice("light",  12)
-io.addDevice("light1", 13)
-io.addDevice("light2", 14)
+io = adafruitio.AdafruitIO( "IOName","YOUR_AIO_KEY")
+io.addDevice("light",  18)
+io.addDevice("light1", 19)
+io.addDevice("light2", 26)
 io.addAnalogSensor("sensor", SMOKE)
 io.begin()
-
 print("System Ready")
 
-while True:
-    io.run()          # MQTT + analog send
-    wifi.keepAlive()  # WiFi auto reconnect
-    time.sleep_ms(100)
+# ── main loop ────────────────────────────────────────────
+def main():
+    while True:
+        io.run()
+        wifi.keepAlive()
+        time.sleep_ms(100)
+
+# ── cleanup (runs on Ctrl+C or any error) ────────────────
+def cleanup():
+    print("Disconnecting MQTT...")
+    try:
+        io.disconnect()
+    except:
+        pass
+    print("Turning off all devices...")
+    try:
+        io.allOff()       # if your adafruitio lib has this
+    except:
+        pass
+
+# ── entry point ──────────────────────────────────────────
+systemio.run(main, cleanup)
 ```
 
 > ⚠️ Replace `"YOUR_WIFI"`, `"YOUR_PASSWORD"`, and `"YOUR_AIO_KEY"` with your actual credentials before running.
